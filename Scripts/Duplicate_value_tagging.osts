@@ -1,0 +1,62 @@
+function main(workbook: ExcelScript.Workbook) {
+  // 获取当前选中的单元格区域
+  let selectedRange: ExcelScript.Range = workbook.getSelectedRange();
+
+  // 获取选中区域的值，值可能是 (string | number | boolean | undefined)
+  let selectedValues: (string | number | boolean | undefined)[][] = selectedRange.getValues();
+
+  // 用于存储每个值的出现次数
+  let valueCountMap: { [key: string]: number } = {};
+
+  // 用于存储每个值对应的颜色
+  let colorMap: { [key: string]: string } = {};
+
+  // 遍历单元格，统计每个值的出现次数
+  for (let row = 0; row < selectedValues.length; row++) {
+    for (let col = 0; col < selectedValues[row].length; col++) {
+      let cellValue: string = selectedValues[row][col]?.toString() || '';
+
+      // 跳过空单元格和空字符串
+      if (cellValue === '') {
+        continue;
+      }
+
+      valueCountMap[cellValue] = (valueCountMap[cellValue] || 0) + 1;
+    }
+  }
+
+  // 遍历单元格，仅对出现2次或以上的值进行标记
+  for (let row = 0; row < selectedValues.length; row++) {
+    for (let col = 0; col < selectedValues[row].length; col++) {
+      let cellValue: string = selectedValues[row][col]?.toString() || '';
+
+      // 跳过空单元格和空字符串
+      if (cellValue === '') {
+        continue;
+      }
+
+      // 仅标记出现次数大于等于 2 的值
+      if (valueCountMap[cellValue] >= 2) {
+        // 如果该值尚未分配颜色，生成一个随机的浅色 HEX 颜色
+        if (!colorMap[cellValue]) {
+          colorMap[cellValue] = getRandomLightHexColor();
+        }
+        // 设置单元格的填充颜色
+        selectedRange.getCell(row, col).getFormat().getFill().setColor(colorMap[cellValue]);
+      }
+    }
+  }
+}
+
+// 生成随机浅色HEX颜色的函数，确保RGB值较高，颜色对比度高
+function getRandomLightHexColor(): string {
+  let red = getRandomInRange(160, 255).toString(16).padStart(2, '0');
+  let green = getRandomInRange(160, 255).toString(16).padStart(2, '0');
+  let blue = getRandomInRange(160, 255).toString(16).padStart(2, '0');
+  return `#${red}${green}${blue}`;
+}
+
+// 在范围内生成随机数的辅助函数
+function getRandomInRange(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
